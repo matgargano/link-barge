@@ -16,4 +16,4 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Important Links
 
-[Figma] (https://www.figma.com/file/vZHOFnRPBNdAVTrnWaXywL/Untitled?node-id=2%3A63&t=ubjjIiyUbVTQgd9f-1)
+[Figma](https://www.figma.com/file/vZHOFnRPBNdAVTrnWaXywL/Untitled?node-id=2%3A63&t=ubjjIiyUbVTQgd9f-1)
