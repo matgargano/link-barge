@@ -4,8 +4,8 @@ const getCurrentUser = () => {
     email: "mgargano@gmail.com",
     name: "Mat Gargano",
     bio: "The quick brown fox.....",
-    avatar: "https://placebear.com/200/200"
-    };
+    avatar: "https://placebear.com/200/200",
+  };
 };
 
 const getLinks = (userId) => {
@@ -63,4 +63,4 @@ const getLinksLinks = (userId) => {
   return getLinksFiltered(userId, "link");
 };
 
-export {getLinksLinks, getSocialLinks, getCurrentUser}
+export { getLinksLinks, getSocialLinks, getCurrentUser };

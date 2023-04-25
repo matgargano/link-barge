@@ -1,12 +1,9 @@
-import Gravatar from "react-gravatar";
-import { getCurrentUser } from "../app/utils/data";
+import { getCurrentUser } from "../utils/data";
 
-const {name, email} = getCurrentUser();
+const { name, email } = getCurrentUser();
 
 const TopContent = () => {
-    return <div>
-        
-    </div>
-}
+  return <div></div>;
+};
 
 export default TopContent;
