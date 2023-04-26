@@ -4,7 +4,7 @@
 
 @layer components {
   .button {
-    @apply mb-2 w-[auto] h-[auto] text-center h1 line-clamp-1 active:relative active:top-[4px] active:shadow-[2px_2px_0px_#000000] active:shadow-none bg-brutal-yellow border-black box-border shadow-[4px_4px_0px_#000000] border-4 w-full px-[32px];
+    @apply text-3xl lg:h1 pb-3 mb-2 w-[auto] h-[auto] text-center line-clamp-1 active:relative active:top-[4px] active:shadow-[2px_2px_0px_#000000] active:shadow-none bg-brutal-yellow border-black box-border shadow-[4px_4px_0px_#000000] border-4 w-full px-[32px];
   }
 
   .h1,

@@ -1,13 +1,13 @@
 import TopContent from "../components/TopContent";
 import SocialLinks from "../components/SocialLinks";
-import NonSocialLinks from "../components/NonSocialLinks";
+import LinksLinks from "../components/LinksLinks";
 
 export default async function Home() {
   return (
     <main>
       <TopContent />
       <SocialLinks />
-      <NonSocialLinks />
+      <LinksLinks />
     </main>
   );
 }
