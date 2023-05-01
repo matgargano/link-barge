@@ -1,3 +1,10 @@
+import supabase from "csc-start/utils/supabase";
+
 export default async function Home() {
-  return <main></main>;
+  const user = await supabase.auth.getUser();
+  return (
+    <main>
+      <pre>{JSON.stringify(user, 0, 1)}</pre>
+    </main>
+  );
 }

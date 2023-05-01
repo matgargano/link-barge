@@ -2,10 +2,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerUser } from "csc-start/utils/data";
+import useMustBeLoggedOut from "csc-start/hooks/useMustBeLoggedOut";
 
 const Register = () => {
+  useMustBeLoggedOut("/profile");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState(null);
 
@@ -14,11 +17,17 @@ const Register = () => {
   const submit = async (e) => {
     e.preventDefault();
     setError(false);
-    if (email && password && name) {
-      const { error, success } = await registerUser(email, password, name);
+    if (email && password && name && slug) {
+      const { error, success } = await registerUser(
+        email,
+        password,
+        name,
+        slug
+      );
 
       if (success) {
-        router.push("/");
+        router.push("/login", { promptLogin: true });
+        return;
       }
 
       setError(error.message);
@@ -37,13 +46,23 @@ const Register = () => {
         ) : null}
         <input
           required
+          value={name}
           className="p-3 rounded"
           type="name"
           onChange={(e) => setName(e.target.value)}
-          placeholder="Username"
+          placeholder="Name"
         />
         <input
           required
+          value={slug}
+          className="p-3 rounded"
+          type="slug"
+          onChange={(e) => setSlug(e.target.value)}
+          placeholder="Slug"
+        />
+        <input
+          required
+          value={email}
           className="p-3 rounded"
           type="email"
           onChange={(e) => setEmail(e.target.value)}
@@ -51,6 +70,7 @@ const Register = () => {
         />
         <input
           required
+          value={password}
           className="p-3 rounded"
           type="password"
           onChange={(e) => setPassword(e.target.value)}

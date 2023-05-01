@@ -1,7 +1,6 @@
 "use client";
 
-import { getUserProfile } from "csc-start/utils/data";
-import supabase from "csc-start/utils/supabase";
+import { getCurrentUser } from "csc-start/utils/data";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -9,18 +8,12 @@ const User = () => {
   const [user, setUser] = useState(null);
   const router = useRouter();
   useEffect(() => {
-    async function getUserAndLinks() {
-      const session = await supabase.auth.getSession();
+    const getUser = async () => {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    };
 
-      if (session?.data?.session?.user?.id) {
-        const user = await getUserProfile(session.data.session.user.id);
-        setUser(user);
-
-        return;
-      }
-      router.push("/login");
-    }
-    getUserAndLinks();
+    getUser();
   }, [router]);
 
   if (!user) {
@@ -33,7 +26,7 @@ const User = () => {
 
   return (
     <div>
-      <p>Loaded</p>
+      <pre>{JSON.stringify(user, 0, 1)}</pre>
     </div>
   );
 };

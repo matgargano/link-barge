@@ -1,9 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { registerUser, loginUser } from "csc-start/utils/data";
+import { getSession, loginUser } from "csc-start/utils/data";
+import useMustBeLoggedOut from "csc-start/hooks/useMustBeLoggedOut";
 
 const Login = () => {
+  useMustBeLoggedOut("/profile");
+
+  const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -17,7 +21,7 @@ const Login = () => {
       const { error, success } = await loginUser(email, password);
 
       if (success) {
-        router.push("/");
+        router.push("/profile");
         return;
       }
 
@@ -38,6 +42,7 @@ const Login = () => {
 
         <input
           required
+          value={email}
           className="p-3 rounded"
           type="email"
           onChange={(e) => setEmail(e.target.value)}
@@ -45,6 +50,7 @@ const Login = () => {
         />
         <input
           required
+          value={password}
           className="p-3 rounded"
           type="password"
           onChange={(e) => setPassword(e.target.value)}
