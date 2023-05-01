@@ -1,3 +1,5 @@
+import supabase from "./supabase";
+
 const getCurrentUser = () => {
   return {
     id: 1,
@@ -8,41 +10,50 @@ const getCurrentUser = () => {
   };
 };
 
-const getLinks = (userId) => {
-  return [
-    {
-      id: 1,
-      userId: 1,
-      url: "https://twitter.com/foobar",
-      order: 1,
-      linkType: "social",
-      title: "Twitter",
-    },
-    {
-      id: 2,
-      userId: 1,
-      url: "https://facebook.com/foobar",
-      order: 2,
-      linkType: "social",
-      title: "Facebook",
-    },
-    {
-      id: 3,
-      userId: 1,
-      url: "https://mycompany.com",
-      order: 1,
-      linkType: "link",
-      title: "My Company!",
-    },
-    {
-      id: 4,
-      userId: 1,
-      url: "https://myteam.com",
-      order: 2,
-      linkType: "link",
-      title: "Go sportsball Go",
-    },
-  ];
+const loginUser = async (email, password) => {
+  const authResponse = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  debugger;
+  if (authResponse.data.user) {
+    const name = await supabase
+      .from("profile")
+      .select("name")
+      .eq("id", authResponse.data.user.id);
+    return { ...authResponse.data, name: name.data[0].name, success: true };
+  }
+
+  if (authResponse.error) {
+    return { success: false, error: authResponse.error };
+  }
+};
+
+const registerUser = async (email, password, name) => {
+  const authResponse = await supabase.auth.signUp({ email, password });
+  if (authResponse.data.user) {
+    await supabase
+      .from("profile")
+      .insert([{ id: authResponse.data.user.id, name }]);
+
+    return { ...authResponse.data, name, success: true };
+  }
+
+  if (authResponse.error) {
+    return { success: false, error: authResponse.error };
+  }
+};
+
+const getLinks = async (userId) => {
+  const { data, error } = await supabase
+    .from("links")
+    .select("*")
+    .eq("user_id", userId);
+  if (error) {
+    console.error(error);
+    return [];
+  }
+  return data;
 };
 
 const getLinksFiltered = (userId, by) => {
@@ -63,4 +74,24 @@ const getLinksLinks = (userId) => {
   return getLinksFiltered(userId, "link");
 };
 
-export { getLinksLinks, getSocialLinks, getCurrentUser };
+const getUserProfile = async (user_id) => {
+  let { data: profile, error } = await supabase
+    .from("profile")
+    .select("*")
+    .eq("id", user_id);
+
+  return {
+    name: profile[0].name,
+    picture: profile[0].picture,
+    bio: profile[0].bio,
+  };
+};
+
+export {
+  registerUser,
+  getLinksLinks,
+  getSocialLinks,
+  getCurrentUser,
+  getUserProfile,
+  loginUser,
+};
