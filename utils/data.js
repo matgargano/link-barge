@@ -1,13 +1,20 @@
 import supabase from "./supabase";
 
-const getCurrentUser = () => {
-  return {
-    id: 1,
-    email: "mgargano@gmail.com",
-    name: "Mat Gargano",
-    bio: "The quick brown fox.....",
-    avatar: "https://placebear.com/200/200",
-  };
+const getCurrentUser = async () => {
+  const session = await supabase.auth.getSession();
+  if (session?.data?.session?.user) {
+    return session.data.session.user;
+  }
+
+  return null;
+
+  // return {
+  //   id: 1,
+  //   email: "mgargano@gmail.com",
+  //   name: "Mat Gargano",
+  //   bio: "The quick brown fox.....",
+  //   avatar: "https://placebear.com/200/200",
+  // };
 };
 
 const getLinks = (userId) => {
@@ -67,57 +74,103 @@ const getLinksLinks = (userId) => {
 
 //registerUser('foo@bar.com', '1234', 'John Doe', 'john-doe')
 const registerUser = async (email, password, name, slug) => {
-  const {data, error} =  await supabase
-    .from('profile')
-    .select('*')
-    .eq('slug', slug);
-  if(error){
+  debugger;
+  const { data, error } = await supabase
+    .from("profile")
+    .select("*")
+    .eq("slug", slug);
+  if (error) {
     return {
       success: false,
       message: error.message,
-    }
+    };
   }
-  if(data.length >0) {
+  if (data.length > 0) {
     return {
       success: false,
-      message: 'User slug already exists'
-    }
+      message: "User slug already exists",
+    };
   }
 
   const authResponse = await supabase.auth.signUp({
-    email, password
+    email,
+    password,
   });
 
   if (authResponse.error) {
     return {
       success: false,
-      message: authResponse.error.message
-    }
+      message: authResponse.error.message,
+    };
   }
 
-  if(authResponse.data.user) {
+  if (authResponse.data.user) {
     const addMetaResponse = await supabase
       .from("profile")
-      .insert([{user_id: authResponse.data.user.id, name, slug}])
+      .insert([{ user_id: authResponse.data.user.id, name, slug }]);
 
-    if(addMetaResponse.error) {
+    if (addMetaResponse.error) {
       return {
         success: false,
-        message: addMetaResponse.error.message
-      }
+        message: addMetaResponse.error.message,
+      };
     }
     return {
-      success:true,
-      ...addMetaResponse.data
-    }
+      success: true,
+      message:
+        "Registration successful, please wait a few moments to be taken to the login page",
+      ...addMetaResponse.data,
+    };
   }
 
   return {
     success: false,
-    message: 'An unknown error has occurred'
+    message: "An unknown error has occurred",
+  };
+};
+
+const loginUser = async (email, password) => {
+  const authResponse = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (authResponse.error) {
+    return {
+      success: false,
+      error: authResponse.error,
+    };
   }
 
+  if (authResponse.data.user) {
+    const meta = await supabase
+      .from("profile")
+      .select("*")
+      .eq("user_id", authResponse.data.user.id);
 
-}
+    if (meta.error) {
+      return {
+        success: false,
+        error: meta.error,
+      };
+    }
+    return {
+      ...authResponse,
+      meta,
+      success: true,
+    };
+  }
 
-export { registerUser, getLinksLinks, getSocialLinks, getCurrentUser };
+  return {
+    success: false,
+    message: "An unknown error has occurred",
+  };
+};
+
+export {
+  loginUser,
+  registerUser,
+  getLinksLinks,
+  getSocialLinks,
+  getCurrentUser,
+};

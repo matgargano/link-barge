@@ -2,8 +2,11 @@
 
 import { registerUser } from "csc-start/utils/data";
 import { useReducer } from "react";
+import { useRouter } from "next/navigation";
 
 const Register = () => {
+  const router = useRouter();
+
   function reducer(state, action) {
     switch (action.type) {
       case "email":
@@ -17,7 +20,7 @@ const Register = () => {
         return { ...state, response: action.response };
     }
 
-    throw Error("Unknown action.");
+    throw Error("Unknown action." + action.type);
   }
 
   const initialState = {
@@ -31,6 +34,7 @@ const Register = () => {
 
   const [state, dispatch] = useReducer(reducer, initialState);
   const { email, name, slug, password, response, loading } = state;
+
   const register = async (e) => {
     dispatch({ type: "loading", loading: true });
     e.preventDefault();
@@ -38,7 +42,13 @@ const Register = () => {
     const response = await registerUser(email, password, name, slug);
     dispatch({ type: "response", response });
     dispatch({ type: "loading", loading: false });
+    if (!!response?.success) {
+      setTimeout(() => {
+        router.push("/login");
+      }, 3000);
+    }
   };
+
   return (
     <div className="barge">
       {response && (
@@ -62,12 +72,15 @@ const Register = () => {
         onSubmit={register}
         className={loading ? "opacity-[10%] pointer-events-none" : ""}
       >
+        {/* ["email", "name", "slug", "password", "response", "loading"] */}
         {Object.keys(initialState)
           .filter((k) => !["response", "loading"].includes(k))
           .map((key) => {
             let type = "text";
-            if ([type].includes("email", "password")) {
-              type = key;
+            if (key === "password") {
+              type = "password";
+            } else if (key === "email") {
+              type = "email";
             }
 
             return (
@@ -79,11 +92,11 @@ const Register = () => {
                   className="h3 border-2 border-black ml-5 inline-block w-[220px] px-2"
                   required
                   name={key}
-                  onChange={(e) =>
-                    dispatch({ type: e.target.name, value: e.target.value })
-                  }
+                  onChange={(e) => {
+                    dispatch({ type: e.target.name, value: e.target.value });
+                  }}
                   value={state[key]}
-                  type={key}
+                  type={type}
                 />
               </p>
             );
