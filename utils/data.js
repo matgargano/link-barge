@@ -3,18 +3,23 @@ import supabase from "./supabase";
 const getCurrentUser = async () => {
   const session = await supabase.auth.getSession();
   if (session?.data?.session?.user) {
-    return session.data.session.user;
+    const { data, error } = await supabase
+      .from("profile")
+      .select("*")
+      .eq("user_id", session.data.session.user.id);
+
+    const user = { ...session.data.session.user };
+    user.bargeMeta = data;
+    return { data: user, error };
   }
 
   return null;
+};
 
-  // return {
-  //   id: 1,
-  //   email: "mgargano@gmail.com",
-  //   name: "Mat Gargano",
-  //   bio: "The quick brown fox.....",
-  //   avatar: "https://placebear.com/200/200",
-  // };
+const logout = async () => {
+  const { error } = await supabase.auth.signOut();
+
+  return error;
 };
 
 const getLinks = (userId) => {
@@ -74,7 +79,6 @@ const getLinksLinks = (userId) => {
 
 //registerUser('foo@bar.com', '1234', 'John Doe', 'john-doe')
 const registerUser = async (email, password, name, slug) => {
-  debugger;
   const { data, error } = await supabase
     .from("profile")
     .select("*")
@@ -173,4 +177,5 @@ export {
   getLinksLinks,
   getSocialLinks,
   getCurrentUser,
+  logout,
 };
