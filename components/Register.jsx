@@ -3,9 +3,13 @@
 import { registerUser } from "csc-start/utils/data";
 import { useReducer } from "react";
 import { useRouter } from "next/navigation";
+import useUserMustBeLoggedOut from "csc-start/hooks/useUserMustBeLoggedOut";
+import useUser from "csc-start/hooks/useUser";
 
 const Register = () => {
   const router = useRouter();
+  useUserMustBeLoggedOut("/");
+  const { fullyLoaded } = useUser();
 
   function reducer(state, action) {
     switch (action.type) {
@@ -48,6 +52,10 @@ const Register = () => {
       }, 3000);
     }
   };
+
+  if (!fullyLoaded) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div className="barge">

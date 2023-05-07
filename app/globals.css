@@ -11,6 +11,10 @@
     @apply text-lg pb-1 w-auto;
   }
 
+  .button:disabled {
+    @apply pointer-events-none opacity-[0.5];
+  }
+
   .h1,
   .h2 {
     @apply leading-none;

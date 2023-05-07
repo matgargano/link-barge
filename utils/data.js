@@ -3,21 +3,34 @@ import supabase from "./supabase";
 const getCurrentUser = async () => {
   const session = await supabase.auth.getSession();
   if (session?.data?.session?.user) {
-    return session.data.session.user;
+    const { data, error } = await supabase
+      .from("profile")
+      .select("*")
+      .eq("user_id", session.data.session.user.id);
+
+    const user = { ...session.data.session.user };
+    user.bargeMeta = data;
+    return { data: user, error };
   }
 
   return null;
-
-  // return {
-  //   id: 1,
-  //   email: "mgargano@gmail.com",
-  //   name: "Mat Gargano",
-  //   bio: "The quick brown fox.....",
-  //   avatar: "https://placebear.com/200/200",
-  // };
 };
 
-const getLinks = (userId) => {
+const getLinks = async (userId) => {
+  let actualUserId = userId;
+  if (!actualUserId) {
+    const {
+      data: { id },
+    } = await getCurrentUser();
+    actualUserId = id;
+  }
+  const { data, error } = await supabase
+    .from("links")
+    .select("*")
+    .eq("user_id", actualUserId);
+
+  return data;
+
   return [
     {
       id: 1,
@@ -54,12 +67,13 @@ const getLinks = (userId) => {
   ];
 };
 
-const getLinksFiltered = (userId, by) => {
+const getLinksFiltered = async (userId, by) => {
   if (!["social", "link"].includes(by)) {
     return false;
   }
+  const links = await getLinks();
 
-  return getLinks()
+  return links
     .filter(({ linkType }) => linkType === by)
     .sort((a, b) => a.order - b.order);
 };
@@ -74,7 +88,6 @@ const getLinksLinks = (userId) => {
 
 //registerUser('foo@bar.com', '1234', 'John Doe', 'john-doe')
 const registerUser = async (email, password, name, slug) => {
-  debugger;
   const { data, error } = await supabase
     .from("profile")
     .select("*")
@@ -167,7 +180,20 @@ const loginUser = async (email, password) => {
   };
 };
 
+const saveLinks = async (links) => {
+  const {
+    data: { id },
+  } = await getCurrentUser();
+
+  links.forEach(async (link) => {
+    link.user_id = id;
+    const addMetaResponse = await supabase.from("links").insert(link);
+    debugger;
+  });
+};
+
 export {
+  saveLinks,
   loginUser,
   registerUser,
   getLinksLinks,
