@@ -3,8 +3,10 @@
 import { registerUser } from "csc-start/utils/data";
 import { useReducer } from "react";
 import { useRouter } from "next/navigation";
+import useUserMustBeLoggedOut from "csc-start/app/hooks/useUserMustBeLoggedOut";
 
 const Register = () => {
+  useUserMustBeLoggedOut("/");
   const router = useRouter();
 
   function reducer(state, action) {

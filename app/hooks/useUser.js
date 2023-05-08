@@ -1,5 +1,6 @@
 "use client";
 import { getCurrentUser } from "csc-start/utils/data";
+import supabase from "csc-start/utils/supabase";
 import { useRouter } from "next/navigation";
 import { useEffect, useReducer } from "react";
 
@@ -34,18 +35,24 @@ const useUser = () => {
 
   const { fullyLoaded, user, loading, error } = state;
 
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (["SIGNED_IN", "SIGNED_OUT"].includes(event)) {
+      getUser();
+    }
+  });
+
+  const getUser = async () => {
+    dispatch({ type: "loading", value: null });
+    const request = await getCurrentUser();
+
+    dispatch({ type: "user", value: request?.data });
+    dispatch({ type: "loading", value: false });
+    dispatch({ type: "error", value: request?.error?.message });
+    dispatch({ type: "fullyLoaded", value: true });
+  };
+
   useEffect(() => {
     dispatch({ type: "loading", value: true });
-
-    const getUser = async () => {
-      dispatch({ type: "loading", value: null });
-      const request = await getCurrentUser();
-
-      dispatch({ type: "user", value: request?.data });
-      dispatch({ type: "loading", value: false });
-      dispatch({ type: "error", value: request?.error?.message });
-      dispatch({ type: "fullyLoaded", value: true });
-    };
 
     getUser();
   }, []);

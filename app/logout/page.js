@@ -14,7 +14,7 @@ const Page = () => {
     logoutInner();
   }, [router]);
 
-  return <p>Logging out...</p>;
+  return <p className="barge">Logging out...</p>;
 };
 
 export default Page;

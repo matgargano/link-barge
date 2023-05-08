@@ -3,8 +3,10 @@
 import { loginUser } from "csc-start/utils/data";
 import { useReducer } from "react";
 import { useRouter } from "next/navigation";
+import useUserMustBeLoggedOut from "csc-start/app/hooks/useUserMustBeLoggedOut";
 
 const Login = () => {
+  useUserMustBeLoggedOut("/profile");
   const router = useRouter();
 
   function reducer(state, action) {
@@ -42,8 +44,8 @@ const Login = () => {
     dispatch({ type: "loading", value: false });
     if (!!response?.success) {
       setTimeout(() => {
-        router.replace("/");
-      }, 1000);
+        router.replace("/profile");
+      }, 2000);
     }
   };
 

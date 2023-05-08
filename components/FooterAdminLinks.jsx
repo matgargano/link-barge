@@ -7,7 +7,7 @@ const FooterAdminLinks = () => {
   const { user, fullyLoaded } = useUser();
 
   return (
-    <div className="mt-5 small flex gap-5">
+    <div className="mt-5 small flex gap-5 justify-center w-full">
       {!fullyLoaded && <Skeleton />}
       {!!fullyLoaded && !user && (
         <>

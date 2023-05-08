@@ -15,7 +15,7 @@ const TopContent = () => {
           className="rounded-full"
         />
       )}
-      <p className="h1">{name}</p>
+      <div className="h1">{name}</div>
     </div>
   );
 };

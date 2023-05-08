@@ -1,12 +1,24 @@
 import supabase from "./supabase";
 
+const getUserIdBySlug = async (slug) => {
+  const { data, error } = await supabase
+    .from("profile")
+    .select("user_id")
+    .eq("slug", slug)
+    .limit(1)
+    .single();
+
+  return { data, error };
+};
+
 const getCurrentUser = async () => {
   const session = await supabase.auth.getSession();
   if (session?.data?.session?.user) {
     const { data, error } = await supabase
       .from("profile")
       .select("*")
-      .eq("user_id", session.data.session.user.id);
+      .eq("user_id", session.data.session.user.id)
+      .single();
 
     const user = { ...session.data.session.user };
     user.bargeMeta = data;
@@ -22,59 +34,87 @@ const logout = async () => {
   return error;
 };
 
-const getLinks = (userId) => {
-  return [
-    {
-      id: 1,
-      userId: 1,
-      url: "https://twitter.com/foobar",
-      order: 1,
-      linkType: "social",
-      title: "Twitter",
-    },
-    {
-      id: 2,
-      userId: 1,
-      url: "https://facebook.com/foobar",
-      order: 2,
-      linkType: "social",
-      title: "Facebook",
-    },
-    {
-      id: 3,
-      userId: 1,
-      url: "https://mycompany.com",
-      order: 1,
-      linkType: "link",
-      title: "My Company!",
-    },
-    {
-      id: 4,
-      userId: 1,
-      url: "https://myteam.com",
-      order: 2,
-      linkType: "link",
-      title: "Go sportsball Go",
-    },
-  ];
+const getLinks = async (user_id) => {
+  const { error, data } = await supabase
+    .from("links")
+    .select("*")
+    .eq("user_id", user_id);
+
+  if (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+
+  return { success: true, data };
 };
 
-const getLinksFiltered = (userId, by) => {
+const getLinksFiltered = async (user_id, by) => {
   if (!["social", "link"].includes(by)) {
     return false;
   }
+  const { success, data = null, message = null } = await getLinks(user_id);
 
-  return getLinks()
+  if (!success) {
+    return { success, message };
+  }
+
+  if (!Array.isArray(data) || data.length === 0) {
+    return [];
+  }
+
+  return data
     .filter(({ linkType }) => linkType === by)
     .sort((a, b) => a.order - b.order);
 };
 
-const getSocialLinks = (userId) => {
-  return getLinksFiltered(userId, "social");
+const getSocialLinks = async (userId) => {
+  return await getLinksFiltered(userId, "social");
 };
 
-const getLinksLinks = (userId) => {
-  return getLinksFiltered(userId, "link");
+const getLinksLinks = async (userId) => {
+  return await getLinksFiltered(userId, "link");
+};
+
+const saveLinks = async (user, links, type) => {
+  const { id } = user;
+  const { error: deleteError, data: deleteData } = await supabase
+    .from("links")
+    .delete()
+    .eq("user_id", id)
+    .eq("linkType", type);
+
+  if (deleteError) {
+    return {
+      success: false,
+      message: deleteError.message,
+    };
+  }
+
+  const insertResponse = await supabase.from("links").insert(
+    links.map((link) => {
+      delete link.id;
+      link.user_id = id;
+      console.log(link);
+      return link;
+    })
+  );
+
+  const { error: addLinksError, data: addLinksData } = insertResponse;
+
+  if (addLinksError) {
+    return {
+      success: false,
+      message: addLinksError.message,
+    };
+  }
+  return {
+    success: true,
+    data: addLinksData,
+    links,
+    message: "Successfully added",
+  };
 };
 
 //registerUser('foo@bar.com', '1234', 'John Doe', 'john-doe')
@@ -172,10 +212,12 @@ const loginUser = async (email, password) => {
 };
 
 export {
+  getUserIdBySlug,
   loginUser,
   registerUser,
   getLinksLinks,
   getSocialLinks,
   getCurrentUser,
   logout,
+  saveLinks,
 };
