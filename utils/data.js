@@ -1,21 +1,33 @@
 import supabase from "./supabase";
 
 const getCurrentUser = async () => {
+  // grab the session from supabase (which handles all authentication)
   const session = await supabase.auth.getSession();
-  if (session?.data?.session?.user) {
-    return session.data.session.user;
+  // if a user property exists in the session.data.session object
+  if(session?.data?.session?.user) {
+    //grab from the meta table we created for the current logged
+    // in user, and attach it to the user object under the key
+    // barge meta, this is so we can access for the current user's 
+    // name and slug
+     const {data, error} = await supabase
+          .from('profile')
+          .select('*')
+          .eq('user_id',session.data.session.user.id)
+          .single();
+          // here we take the user from the session.data.session
+          // object and attach to it a property bargeMeta
+          // that holds the name and slug (and some other info
+          // that is not important)
+      const user = {...session.data.session.user, 
+          bargeMeta: data};
+      return {
+          data: user,
+          error
+      };
+
   }
-
   return null;
-
-  // return {
-  //   id: 1,
-  //   email: "mgargano@gmail.com",
-  //   name: "Mat Gargano",
-  //   bio: "The quick brown fox.....",
-  //   avatar: "https://placebear.com/200/200",
-  // };
-};
+}
 
 const getLinks = (userId) => {
   return [
@@ -72,9 +84,16 @@ const getLinksLinks = (userId) => {
   return getLinksFiltered(userId, "link");
 };
 
-//registerUser('foo@bar.com', '1234', 'John Doe', 'john-doe')
+// register a user//
+/**
+ * Register a user by passing in an email, password, name and slug
+ * @param {*} email 
+ * @param {*} password 
+ * @param {*} name 
+ * @param {*} slug 
+ * @returns plain old javascript object with success, message and optionally, the rest of the addMetaResponse.data object
+ */
 const registerUser = async (email, password, name, slug) => {
-  debugger;
   const { data, error } = await supabase
     .from("profile")
     .select("*")
@@ -129,6 +148,15 @@ const registerUser = async (email, password, name, slug) => {
   };
 };
 
+/**
+ * Log in a user
+ * @param {*} email 
+ * @param {*} password 
+ * @returns plain old javascript object with success, message and optionally, the rest of the addMetaResponse.data object
+ * 
+ * NOTE, it previously responded with error as the name of the key, it was renamed to message
+ * for consistency
+ */
 const loginUser = async (email, password) => {
   const authResponse = await supabase.auth.signInWithPassword({
     email,
@@ -138,7 +166,7 @@ const loginUser = async (email, password) => {
   if (authResponse.error) {
     return {
       success: false,
-      error: authResponse.error,
+      message: authResponse.error,
     };
   }
 
@@ -151,7 +179,7 @@ const loginUser = async (email, password) => {
     if (meta.error) {
       return {
         success: false,
-        error: meta.error,
+        message: meta.error,
       };
     }
     return {

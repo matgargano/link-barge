@@ -1,26 +1,23 @@
 "use client";
 
-import { registerUser } from "csc-start/utils/data";
+import { loginUser } from "csc-start/utils/data";
 import { useReducer } from "react";
 import { useRouter } from "next/navigation";
 import useUserMustBeLogged from "csc-start/hooks/useUserMustBeLogged";
 
-
-const Register = () => {
-  useUserMustBeLogged("out", "/profile");  
+const Login = () => {
+  useUserMustBeLogged("out", "/profile");
   const router = useRouter();
 
   function reducer(state, action) {
     switch (action.type) {
       case "email":
-      case "name":
-      case "slug":
       case "password":
         return { ...state, [action.type]: action.value };
       case "loading":
-        return { ...state, loading: action.loading };
+        return { ...state, loading: action.value };
       case "response":
-        return { ...state, response: action.response };
+        return { ...state, response: action.value };
     }
 
     throw Error("Unknown action." + action.type);
@@ -28,27 +25,27 @@ const Register = () => {
 
   const initialState = {
     email: "",
-    name: "",
-    slug: "",
     password: "",
     response: "",
     loading: false,
   };
 
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { email, name, slug, password, response, loading } = state;
+  const { email, password, response, loading } = state;
 
-  const register = async (e) => {
-    dispatch({ type: "loading", loading: true });
+  const login = async (e) => {
+    dispatch({ type: "loading", value: true });
+    dispatch({ type: "response", value: null });
     e.preventDefault();
 
-    const response = await registerUser(email, password, name, slug);
-    dispatch({ type: "response", response });
-    dispatch({ type: "loading", loading: false });
+    const response = await loginUser(email, password);
+
+    dispatch({ type: "response", value: response });
+    dispatch({ type: "loading", value: false });
     if (!!response?.success) {
       setTimeout(() => {
-        router.push("/login");
-      }, 3000);
+        router.replace("/profile");
+      }, 2000);
     }
   };
 
@@ -65,14 +62,13 @@ const Register = () => {
           <span className="font-bold">
             {response.success
               ? `Success ${response.message ? `: ` : ``}`
-              : "Failure: "}
+              : `Failure: ${response.message}`}
           </span>
-          {response.message}
         </div>
       )}
-      <h2 className="my-10 h1 text-center">Register</h2>
+      <h2 className="my-10 h1 text-center">Login</h2>
       <form
-        onSubmit={register}
+        onSubmit={login}
         className={loading ? "opacity-[10%] pointer-events-none" : ""}
       >
         {/* ["email", "name", "slug", "password", "response", "loading"] */}
@@ -112,4 +108,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Login;
