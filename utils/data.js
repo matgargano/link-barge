@@ -1,79 +1,89 @@
 import supabase from "./supabase";
 
+const addNewLink = async (user_id, url, title, order, linkType = "link") => {
+  const insertResponse = await supabase.from("links").insert({
+    order,
+    title,
+    user_id,
+    linkType,
+    url,
+  });
+  if (insertResponse.error) {
+    return {
+      success: false,
+      error: insertResponse.error,
+    };
+  }
+  return {
+    success: true,
+    message: "successfully added",
+    data: insertResponse.data,
+  };
+};
+
 const getCurrentUser = async () => {
   // grab the session from supabase (which handles all authentication)
   const session = await supabase.auth.getSession();
   // if a user property exists in the session.data.session object
-  if(session?.data?.session?.user) {
+  if (session?.data?.session?.user) {
     //grab from the meta table we created for the current logged
     // in user, and attach it to the user object under the key
-    // barge meta, this is so we can access for the current user's 
+    // barge meta, this is so we can access for the current user's
     // name and slug
-     const {data, error} = await supabase
-          .from('profile')
-          .select('*')
-          .eq('user_id',session.data.session.user.id)
-          .single();
-          // here we take the user from the session.data.session
-          // object and attach to it a property bargeMeta
-          // that holds the name and slug (and some other info
-          // that is not important)
-      const user = {...session.data.session.user, 
-          bargeMeta: data};
-      return {
-          data: user,
-          error
-      };
+    const { data: bargeMeta, error } = await supabase
+      .from("profile")
+      .select("*")
+      .eq("user_id", session.data.session.user.id)
+      .single();
+    // here we take the user from the session.data.session
+    // object and attach to it a property bargeMeta
+    // that holds the name and slug (and some other info
+    // that is not important)
+    const socialLinks = await getSocialLinks(session.data.session.user.id);
+    const linkLinks = await getLinksLinks(session.data.session.user.id);
 
+    const user = {
+      ...session.data.session.user,
+      bargeMeta,
+      socialLinks,
+      linkLinks,
+    };
+
+    return {
+      data: user,
+      error,
+    };
   }
   return null;
-}
-
-const getLinks = (userId) => {
-  return [
-    {
-      id: 1,
-      userId: 1,
-      url: "https://twitter.com/foobar",
-      order: 1,
-      linkType: "social",
-      title: "Twitter",
-    },
-    {
-      id: 2,
-      userId: 1,
-      url: "https://facebook.com/foobar",
-      order: 2,
-      linkType: "social",
-      title: "Facebook",
-    },
-    {
-      id: 3,
-      userId: 1,
-      url: "https://mycompany.com",
-      order: 1,
-      linkType: "link",
-      title: "My Company!",
-    },
-    {
-      id: 4,
-      userId: 1,
-      url: "https://myteam.com",
-      order: 2,
-      linkType: "link",
-      title: "Go sportsball Go",
-    },
-  ];
 };
 
-const getLinksFiltered = (userId, by) => {
+const getLinks = async (userId) => {
+  const { data, error } = await supabase
+    .from("links")
+    .select("*")
+    .eq("user_id", userId);
+  if (error) {
+    return {
+      success: false,
+      error,
+    };
+  }
+
+  return data;
+};
+
+const getLinksFiltered = async (userId, by) => {
   if (!["social", "link"].includes(by)) {
     return false;
   }
 
-  return getLinks()
+  const links = await getLinks(userId);
+
+  const linksFiltered = links
     .filter(({ linkType }) => linkType === by)
     .sort((a, b) => a.order - b.order);
+
+  return linksFiltered;
 };
 
 const getSocialLinks = (userId) => {
@@ -87,10 +97,10 @@ const getLinksLinks = (userId) => {
 // register a user//
 /**
  * Register a user by passing in an email, password, name and slug
- * @param {*} email 
- * @param {*} password 
- * @param {*} name 
- * @param {*} slug 
+ * @param {*} email
+ * @param {*} password
+ * @param {*} name
+ * @param {*} slug
  * @returns plain old javascript object with success, message and optionally, the rest of the addMetaResponse.data object
  */
 const registerUser = async (email, password, name, slug) => {
@@ -150,10 +160,10 @@ const registerUser = async (email, password, name, slug) => {
 
 /**
  * Log in a user
- * @param {*} email 
- * @param {*} password 
+ * @param {*} email
+ * @param {*} password
  * @returns plain old javascript object with success, message and optionally, the rest of the addMetaResponse.data object
- * 
+ *
  * NOTE, it previously responded with error as the name of the key, it was renamed to message
  * for consistency
  */
@@ -201,4 +211,5 @@ export {
   getLinksLinks,
   getSocialLinks,
   getCurrentUser,
+  addNewLink,
 };
