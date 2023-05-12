@@ -4,9 +4,11 @@ import { loginUser } from "csc-start/utils/data";
 import { useReducer } from "react";
 import { useRouter } from "next/navigation";
 import useUserMustBeLogged from "csc-start/hooks/useUserMustBeLogged";
+import useUser from "csc-start/hooks/useUser";
 
 const Login = () => {
-  useUserMustBeLogged("out", "/profile");
+  const { user } = useUser();
+  useUserMustBeLogged(user, "out", "/profile");
   const router = useRouter();
 
   function reducer(state, action) {
@@ -45,10 +47,9 @@ const Login = () => {
     if (!!response?.success) {
       setTimeout(() => {
         router.replace("/profile");
-      }, 2000);
+      }, 3000);
     }
   };
-
   return (
     <div className="barge">
       {response && (
@@ -61,8 +62,8 @@ const Login = () => {
         >
           <span className="font-bold">
             {response.success
-              ? `Success ${response.message ? `: ` : ``}`
-              : `Failure: ${response.message}`}
+              ? `Success ${response.message}`
+              : `Failure: ${response.error.message}`}
           </span>
         </div>
       )}

@@ -1,13 +1,5 @@
-import TopContent from "../components/TopContent";
-import SocialLinks from "../components/SocialLinks";
-import LinksLinks from "../components/LinksLinks";
+// @todo ADD ERROR HANDLING THROUGHOUT APP
 
 export default async function Home() {
-  return (
-    <main>
-      <TopContent />
-      <SocialLinks />
-      <LinksLinks />
-    </main>
-  );
+  return <main></main>;
 }

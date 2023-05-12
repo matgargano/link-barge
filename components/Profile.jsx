@@ -6,14 +6,17 @@ import { addNewLink } from "csc-start/utils/data";
 import { useState, useEffect } from "react";
 
 const Profile = () => {
-  useUserMustBeLogged("in", "/login");
-
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [linkType, setLinkType] = useState("link");
   const [currentLinks, setCurrentLinks] = useState([]);
 
-  const { user, fullyLoaded, refreshUser } = useUser();
+  // the user hook, will, provide us with the following, and it is completely abstracted away
+  //  - user, and update whenever it's changed (undefined if loading, set if loaded)
+
+  const { user, refreshUser, error, loading } = useUser();
+  // we removed the useUser in the userMustBeLogged component, and now are supplying the user
+  useUserMustBeLogged(user, "in", "/login");
 
   useEffect(() => {
     if (user) {
@@ -21,6 +24,7 @@ const Profile = () => {
       if (linkType === "link") {
         tempCurrentLinks = user.linkLinks;
       }
+
       setCurrentLinks(tempCurrentLinks);
     }
   }, [user, linkType]);
@@ -36,14 +40,23 @@ const Profile = () => {
     }
     setUrl("");
     setTitle("");
+    //@todo update this to either fake get the links (by taking the latest DB load + adding in the latest pushed link)
+    //  or make a new request....
     refreshUser();
     //handle success
   };
 
   return (
     <div className="barge">
-      {!fullyLoaded && <p>Loading...</p>}
-      {!!fullyLoaded && (
+      {!!error && (
+        <div
+          className={`bg-red-200 border-2 border-red-800 text-red-800 py-2 px-5 my-10 text-center`}
+        >
+          <span className="font-bold">{error.message}</span>
+        </div>
+      )}
+      {!error && loading && <p>Loading...</p>}
+      {!error && !loading && (
         <div>
           <div className="flex justify-between my-5">
             <button

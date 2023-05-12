@@ -1,6 +1,12 @@
 import supabase from "./supabase";
 
+const logout = async () => {
+  const { error } = await supabase.auth.signOut();
+  return { success: !error, error };
+};
+
 const addNewLink = async (user_id, url, title, order, linkType = "link") => {
+  linkRequestData.data = null;
   const insertResponse = await supabase.from("links").insert({
     order,
     title,
@@ -22,6 +28,7 @@ const addNewLink = async (user_id, url, title, order, linkType = "link") => {
 };
 
 const getCurrentUser = async () => {
+  debugger;
   // grab the session from supabase (which handles all authentication)
   const session = await supabase.auth.getSession();
   // if a user property exists in the session.data.session object
@@ -35,12 +42,31 @@ const getCurrentUser = async () => {
       .select("*")
       .eq("user_id", session.data.session.user.id)
       .single();
+
+    if (error) {
+      return {
+        success: false,
+        error,
+      };
+    }
+
     // here we take the user from the session.data.session
     // object and attach to it a property bargeMeta
     // that holds the name and slug (and some other info
     // that is not important)
-    const socialLinks = await getSocialLinks(session.data.session.user.id);
-    const linkLinks = await getLinksLinks(session.data.session.user.id);
+    const { data: socialLinks } = await getSocialLinks(
+      session.data.session.user.id
+    );
+    if (socialLinks?.error) {
+      return socialLinks;
+    }
+
+    const { data: linkLinks } = await getLinksLinks(
+      session.data.session.user.id
+    );
+    if (linkLinks?.error) {
+      return socialLinks;
+    }
 
     const user = {
       ...session.data.session.user,
@@ -50,14 +76,24 @@ const getCurrentUser = async () => {
     };
 
     return {
+      success: true,
       data: user,
-      error,
     };
   }
-  return null;
+  return {
+    success: true,
+    data: null,
+  };
+};
+const linkRequestData = {
+  data: null,
 };
 
 const getLinks = async (userId) => {
+  if (linkRequestData.data) {
+    return linkRequestData.data;
+  }
+
   const { data, error } = await supabase
     .from("links")
     .select("*")
@@ -69,7 +105,9 @@ const getLinks = async (userId) => {
     };
   }
 
-  return data;
+  linkRequestData.data = { success: true, data };
+
+  return { success: true, data };
 };
 
 const getLinksFiltered = async (userId, by) => {
@@ -77,13 +115,31 @@ const getLinksFiltered = async (userId, by) => {
     return false;
   }
 
-  const links = await getLinks(userId);
+  if (!userId) {
+    return {
+      success: false,
+      error: {
+        message: "not logged in",
+      },
+    };
+  }
 
-  const linksFiltered = links
+  const { success, error = null, data = null } = await getLinks(userId);
+  if (!!error) {
+    return {
+      success: false,
+      error,
+    };
+  }
+
+  const linksFiltered = data
     .filter(({ linkType }) => linkType === by)
     .sort((a, b) => a.order - b.order);
 
-  return linksFiltered;
+  return {
+    success: true,
+    data: linksFiltered,
+  };
 };
 
 const getSocialLinks = (userId) => {
@@ -104,20 +160,20 @@ const getLinksLinks = (userId) => {
  * @returns plain old javascript object with success, message and optionally, the rest of the addMetaResponse.data object
  */
 const registerUser = async (email, password, name, slug) => {
-  const { data, error } = await supabase
+  const { data: registerData, error: registerError } = await supabase
     .from("profile")
     .select("*")
     .eq("slug", slug);
-  if (error) {
+  if (registerError) {
     return {
       success: false,
-      message: error.message,
+      error: registerError,
     };
   }
-  if (data.length > 0) {
+  if (registerData.length > 0) {
     return {
       success: false,
-      message: "User slug already exists",
+      error: registerError,
     };
   }
 
@@ -129,7 +185,7 @@ const registerUser = async (email, password, name, slug) => {
   if (authResponse.error) {
     return {
       success: false,
-      message: authResponse.error.message,
+      error: authResponse.error,
     };
   }
 
@@ -141,7 +197,7 @@ const registerUser = async (email, password, name, slug) => {
     if (addMetaResponse.error) {
       return {
         success: false,
-        message: addMetaResponse.error.message,
+        error: addMetaResponse.error,
       };
     }
     return {
@@ -154,7 +210,9 @@ const registerUser = async (email, password, name, slug) => {
 
   return {
     success: false,
-    message: "An unknown error has occurred",
+    error: {
+      message: "An unknown error has occurred",
+    },
   };
 };
 
@@ -176,7 +234,7 @@ const loginUser = async (email, password) => {
   if (authResponse.error) {
     return {
       success: false,
-      message: authResponse.error,
+      error: authResponse.error,
     };
   }
 
@@ -189,19 +247,22 @@ const loginUser = async (email, password) => {
     if (meta.error) {
       return {
         success: false,
-        message: meta.error,
+        error: meta.error,
       };
     }
     return {
       ...authResponse,
       meta,
+      message: "Successfully logged in, please wait to be redirected",
       success: true,
     };
   }
 
   return {
     success: false,
-    message: "An unknown error has occurred",
+    error: {
+      message: "An unknown error has occurred",
+    },
   };
 };
 
@@ -212,4 +273,5 @@ export {
   getSocialLinks,
   getCurrentUser,
   addNewLink,
+  logout,
 };
