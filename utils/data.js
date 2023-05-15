@@ -1,5 +1,51 @@
 import supabase from "./supabase";
 
+const getUserBySlug = async (slug) => {
+  const {data, error} = await supabase
+    .from("profile")
+    .select("user_id")
+    .eq("slug", slug)
+    .limit(1)
+    .single();
+    if(error){
+      return {
+        success: false,
+        error
+      }
+    }
+
+    return {
+      success: true,
+      data
+    }
+    
+}
+
+
+
+const getLatestUsers = async (num = 5) => {
+  const { data, error } = await supabase
+    .from("profile")
+    .select("name, slug")
+    .order("created_at", {ascending: false})
+    .limit(num);
+
+    if(error){
+      return {
+        success: false,
+        error
+      }
+    }
+
+    return {
+      success: true,
+      data
+    }
+
+
+}
+
+
 const logout = async () => {
   const { error } = await supabase.auth.signOut();
   return { success: !error, error };
@@ -274,4 +320,6 @@ export {
   getCurrentUser,
   addNewLink,
   logout,
+  getLatestUsers,
+  getUserBySlug
 };

@@ -5,9 +5,8 @@ import Twitter from "../images/twitter.svg";
 import Instagram from "../images/instagram.svg";
 import Image from "next/image";
 
-const SocialLinks = async () => {
-  const links = await getSocialLinks();
-  console.log(links);
+const SocialLinks = async ({user_id}) => {
+  const {data: links} = await getSocialLinks(user_id);
   const getIcon = (title) => {
     switch (title) {
       case "Facebook":

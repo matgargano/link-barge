@@ -11,7 +11,7 @@ const ActionsFooter = () => {
   if (!user) {
     // user is not logged in
     return (
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-5">
         <Link href="/login">Login</Link>
         <Link href="/register">Register</Link>
       </div>
