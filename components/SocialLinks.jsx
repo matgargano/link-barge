@@ -5,9 +5,11 @@ import Twitter from "../images/twitter.svg";
 import Instagram from "../images/instagram.svg";
 import Image from "next/image";
 
-const SocialLinks = async () => {
-  const links = await getSocialLinks();
-  console.log(links);
+export const revalidate = 30;
+
+const SocialLinks = async (user_id) => {
+  const links = await getSocialLinks(user_id);
+
   const getIcon = (title) => {
     switch (title) {
       case "Facebook":
@@ -20,11 +22,16 @@ const SocialLinks = async () => {
         return Instagram;
     }
   };
+
   return (
     <div className="barge flex gap-[24px] py-[60px] justify-center gap-[43px] items-center flex">
-      {Array.isArray(links) &&
-        links.map(({ id, title, url }) => {
+      {!Array.isArray(links.data) ||
+        (links.data.length === 0 && <p>No links found...</p>)}
+      {Array.isArray(links.data) &&
+        links.data.length > 0 &&
+        links.data.map(({ id, title, url }) => {
           const icon = getIcon(title);
+
           return (
             <a
               key={id}

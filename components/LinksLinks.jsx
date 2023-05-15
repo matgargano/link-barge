@@ -1,11 +1,17 @@
 import { getLinksLinks } from "csc-start/utils/data";
 
-const LinksLinks = async () => {
-  const links = await getLinksLinks();
+export const revalidate = 30;
+
+const LinksLinks = async (user_id) => {
+  const links = await getLinksLinks(user_id);
+
   return (
     <div className="barge flex flex-col gap-[24px] pb-[60px]">
-      {Array.isArray(links) &&
-        links.map(({ id, title, url }) => {
+      {!Array.isArray(links.data) ||
+        (links.data.length === 0 && <p>No links found...</p>)}
+      {Array.isArray(links.data) &&
+        links.data.length === 0 &&
+        links.data.map(({ id, title, url }) => {
           return (
             <a
               key={id}

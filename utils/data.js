@@ -5,6 +5,44 @@ const logout = async () => {
   return { success: !error, error };
 };
 
+const getUserIdBySlug = async (slug) => {
+  const { data, error } = await supabase
+    .from("profile")
+    .select("user_id")
+    .eq("slug", slug)
+    .limit(1)
+    .single();
+
+  if (error) {
+    return {
+      success: false,
+      error,
+    };
+  }
+  return {
+    success: true,
+    data,
+  };
+};
+
+const getLatestSignups = async (num = 5) => {
+  const { data, error } = await supabase
+    .from("profile")
+    .select("name, slug")
+    .order("created_at", { ascending: false })
+    .limit(5);
+  if (data) {
+    return {
+      success: true,
+      data,
+    };
+  }
+  return {
+    success: false,
+    error,
+  };
+};
+
 const addNewLink = async (user_id, url, title, order, linkType = "link") => {
   linkRequestData.data = null;
   const insertResponse = await supabase.from("links").insert({
@@ -28,7 +66,6 @@ const addNewLink = async (user_id, url, title, order, linkType = "link") => {
 };
 
 const getCurrentUser = async () => {
-  debugger;
   // grab the session from supabase (which handles all authentication)
   const session = await supabase.auth.getSession();
   // if a user property exists in the session.data.session object
@@ -274,4 +311,6 @@ export {
   getCurrentUser,
   addNewLink,
   logout,
+  getLatestSignups,
+  getUserIdBySlug,
 };
