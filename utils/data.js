@@ -52,7 +52,8 @@ const logout = async () => {
 };
 
 const addNewLink = async (user_id, url, title, order, linkType = "link") => {
-  linkRequestData.data = null;
+  // remove references to linkRequestData, as it is overzealously caching
+  // linkRequestData.data = null;
   const insertResponse = await supabase.from("links").insert({
     order,
     title,
@@ -131,14 +132,16 @@ const getCurrentUser = async () => {
     data: null,
   };
 };
-const linkRequestData = {
-  data: null,
-};
+// remove references to linkRequestData, as it is overzealously caching
+// const linkRequestData = {
+//   data: null,
+// };
 
 const getLinks = async (userId) => {
-  if (linkRequestData.data) {
-    return linkRequestData.data;
-  }
+// remove references to linkRequestData, as it is overzealously caching
+// if (linkRequestData.data) {
+//   return linkRequestData.data;
+// }
 
   const { data, error } = await supabase
     .from("links")
@@ -150,8 +153,8 @@ const getLinks = async (userId) => {
       error,
     };
   }
-
-  linkRequestData.data = { success: true, data };
+  // remove references to linkRequestData, as it is overzealously caching
+  // linkRequestData.data = { success: true, data };
 
   return { success: true, data };
 };
